@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsMessage;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,7 +17,7 @@ import java.util.regex.Pattern;
 // 用广播接受者，接收短信（备份）
 public class MainActivity_Receiver extends AppCompatActivity {
 
-    private Button bt;
+    private TextView tv;
     private SmsReceiver smsReceiver;
 
     @Override
@@ -24,7 +25,7 @@ public class MainActivity_Receiver extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        bt = findViewById(R.id.bt);
+        tv = findViewById(R.id.tv);
 
         smsReceiver = new SmsReceiver();
 
@@ -32,13 +33,6 @@ public class MainActivity_Receiver extends AppCompatActivity {
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
         registerReceiver(smsReceiver, filter);
-
-        bt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
 
     }
 
@@ -54,14 +48,15 @@ public class MainActivity_Receiver extends AppCompatActivity {
                 // 接收到短信
                 Bundle bundle = intent.getExtras();
                 // 如果一条短信过长，可能会分割成几条短信发送，所有需要用多个pdu代表一个短信(72中文，140字符)
-//                byte[][] pdus = (byte[][]) bundle.get("pdus");// byte[] pbu
+                if (bundle == null) return;
                 Object[] pdus = (Object[]) bundle.get("pdus");// byte[] pbu
+                if (pdus == null) return;
 
                 // 短信内容
                 StringBuilder sb = new StringBuilder(); // 字符串拼接（不牵扯线程）
 
-                for (int i = 0; i < pdus.length; i++) {
-                    SmsMessage message = SmsMessage.createFromPdu((byte[]) pdus[i]);
+                for (Object pdu : pdus) {
+                    SmsMessage message = SmsMessage.createFromPdu((byte[]) pdu);
                     // 1、判断一下是不是我们发的
                     String address = message.getDisplayOriginatingAddress();
                     if (phone.equals(address)) {
@@ -76,7 +71,7 @@ public class MainActivity_Receiver extends AppCompatActivity {
                 if (matcher.find()) {
                     String code = matcher.group();
                     // 显示到界面上
-                    bt.setText(code);
+                    tv.setText(code);
                 }
             }
         }
